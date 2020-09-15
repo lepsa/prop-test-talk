@@ -1,24 +1,26 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<link rel="stylesheet" href="dist/reset.css">
-		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css" id="theme">
+	<title>reveal.js</title>
 
-		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Property  Based Testing</section>
-				<section data-markdown>
-					<textarea data-template>
+	<link rel="stylesheet" href="dist/reset.css">
+	<link rel="stylesheet" href="dist/reveal.css">
+	<link rel="stylesheet" href="dist/theme/black.css" id="theme">
+
+	<!-- Theme used for syntax highlighted code -->
+	<link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>Property Based Testing</section>
+			<section data-markdown>
+				<textarea data-template>
             ### Who am I?
 
             Owen Harvey
@@ -27,71 +29,74 @@
 
             CSIRO Data61: E&amp;D
           </textarea>
-				</section>
+			</section>
+			<section>
 				<section>
-					<section>
-						<h3>
-							What is a property test?
-						</h3>
-						<p class="fragment">
-							A condition holds across a range of data
-						</p>
-					</section>
-					<section>
-						<pre><code class="language-haskell" data-trim data-noescape>
-							reverse (reverse x) == x
-						</code></pre>
-						<pre><code class="language-haskell" data-trim data-noescape>
-							a + (b + c) == (a + b) + c
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<h3>Why care?</h3>
-					<ul>
-						<li>Cover a larger part of your inputs</li>
-						<li>Finds edge cases you didn't think of</li>
-						<li>Automatically reduce to a minimal case</li>
-						<li>Plays nicely with existing tests</li>
-					</ul>
-				</section>
-				<section>
-					<h3>How they work</h3>
-					<p>
-						<ul>
-							<li>Generate some data</li>
-							<li>Test the property</li>
-							<li>Shrink the data if the property fails</li>
-						</ul>
+					<h3>
+						What is a property test?
+					</h3>
+					<p class="fragment">
+						A condition holds across a range of data
 					</p>
 				</section>
 				<section>
-					<section>
-						<h3>Generating data</h3>
-						<p>As opposed to unit tests where your data and answer is baked into the test, a property test will generate its data at run time</p>
-						<p>Libraries offer generators for simple data like numbers, strings, lists</p>
-						<p>Generated data can be filtered to match some requirement like minimum length</p>
-					</section>
-					<section>
-						<pre><code class="language-haskell" data-trim data-noescape>
+					<pre><code class="language-haskell" data-trim data-noescape>
+							reverse (reverse x) == x
+						</code></pre>
+					<pre><code class="language-haskell" data-trim data-noescape>
+							a + (b + c) == (a + b) + c
+						</code></pre>
+				</section>
+			</section>
+			<section>
+				<h3>Why care?</h3>
+				<ul>
+					<li>Cover a larger part of your inputs</li>
+					<li>Finds edge cases you didn't think of</li>
+					<li>Automatically reduce to a minimal case</li>
+					<li>Plays nicely with existing tests</li>
+				</ul>
+			</section>
+			<section>
+				<h3>How they work</h3>
+				<p>
+				<ul>
+					<li>Generate some data</li>
+					<li>Test the property</li>
+					<li>Shrink the data if the property fails</li>
+				</ul>
+				</p>
+			</section>
+			<section>
+				<section>
+					<h3>Generating data</h3>
+					<p>As opposed to unit tests where your data and answer is baked into the test, a property test will generate
+						its data at run time</p>
+					<p>Libraries offer generators for simple data like numbers, strings, lists</p>
+					<p>Generated data can be filtered to match some requirement like minimum length</p>
+				</section>
+				<section>
+					<pre><code class="language-haskell" data-trim data-noescape>
 							text' :: MonadGen m => m Text
 							text' = Gen.text
 							  (Range.constant 1 10)
 							  (Gen.filter (/= '\0') Gen.unicode)
 						</code></pre>
-						<p class="fragment">
-							This is telling the testing library to make a string of 1 to 10 unicode characters, excluding the null character
-						</p>
-						<p class="fragment">
-							If your code breaks on funky characters like direction indicators, bells, or backspace this will find it
-						</p>
-					</section>
-					<section>
-						<p>Generated data is composed to make larger structures</p>
-						<p>You start by describing the smallest part of your data, what it needs, and then use that generator in the next level up</p>
-					</section>
-					<section>
-						<pre><code class="language-haskell" data-trim data-noescape>
+					<p class="fragment">
+						This is telling the testing library to make a string of 1 to 10 unicode characters, excluding the null
+						character
+					</p>
+					<p class="fragment">
+						If your code breaks on funky characters like direction indicators, bells, or backspace this will find it
+					</p>
+				</section>
+				<section>
+					<p>Generated data is composed to make larger structures</p>
+					<p>You start by describing the smallest part of your data, what it needs, and then use that generator in the
+						next level up</p>
+				</section>
+				<section>
+					<pre><code class="language-haskell" data-trim data-noescape>
 							genPassword :: MonadGen m => m Password
 							genPassword = Password <$> text'
 
@@ -101,25 +106,26 @@
 							genUser :: MonadGen m => m user-scalable
 							genUser = User <$> genEmail <*> genPassword
 						</code></pre>
-					</section>
+				</section>
+			</section>
+			<section>
+				<section>
+					<h3>Testing the property</h3>
 				</section>
 				<section>
-					<section>
-						<h3>Testing the property</h3>
-					</section>
-					<section>
-						<p>
-							Now that we can generate our various inputs, we need to test our code.
-						</p>
-						<p>
-							These can be very simple, such as testing a new sorting algorithm against a known good one to rather complex like ensuring that database transactions behave properly.
-						</p>
-						<p>
-							As we saw before, a simple property is that reversing a list twice should be the same as doing nothing.
-						</p>
-					</section>
-					<section>
-						<pre><code class="language-haskell" data-trim data-noescape>
+					<p>
+						Now that we can generate our various inputs, we need to test our code.
+					</p>
+					<p>
+						These can be very simple, such as testing a new sorting algorithm against a known good one to rather complex
+						like ensuring that database transactions behave properly.
+					</p>
+					<p>
+						As we saw before, a simple property is that reversing a list twice should be the same as doing nothing.
+					</p>
+				</section>
+				<section>
+					<pre><code class="language-haskell" data-trim data-noescape>
 							list = Gen.list (Range.linear 0 100) Gen.alpha
 
 							prop_reverse =
@@ -127,44 +133,80 @@
 									xs <- forAll list 
 									reverse (reverse xs) === xs
 						</code></pre>
-						<p>There are a handful of base assertions you can build from</p>
-					</section>
+					<p>There are a handful of base assertions you can build from</p>
 				</section>
+			</section>
+			<section>
 				<section>
 					<h3>Shrinking failing examples</h3>
 				</section>
 				<section>
-					State machines
-				</section>
-				<section>
-					Links / Libraries
-				</section>
-				<section>
-					<h3>Further Reading</h3>
 					<p>
-						<h4>QFPL posts and slide decks</h4>
-						<a href="https://qfpl.io/posts/intro-to-state-machine-testing-1/">Introduction to state machine testing: part 1 by Andrew McMiddlin</a>
-						<br/>
-						<a href="https://qfpl.io/share/talks/state-machine-testing/index.html">Property based state machine testing by Andrew McMiddlin</a>
+						When a failing input is found for a property several things happen
+					</p>
+					<ul>
+						<li>The generator and seed are saved</li>
+						<li>A shrink function is used to make 0 or more <u>smaller</u> values</li>
+						<li>These smaller values are recursively tested</li>
+					</ul>
+				</section>
+				<section>
+					<img  src="prop-test-cycle.svg" width=500 height=500/>
+				</section>
+				<section>
+					<p>
+						If a smaller value cannot be generated the testing stops with the last failing value found.
 					</p>
 				</section>
-			</div>
+			</section>
+			<section>
+				<section>
+					<h3>But Owen my project is all state-y!</h3>
+				</section>
+				<section>
+					<h3>State machines</h3>
+				</section>
+				<section>
+					<p>You can write property tests for stateful applications, but it requires a bit more effort</p>
+					<p>You need to model the state of the target application, matching the expected updates, deletes, etc</p>
+				  <p>I've linked to an excellent blog post on this at the end</p>
+				</section>
+				<section>
+
+				</section>
+			</section>
+			<section>
+				Links / Libraries
+			</section>
+			<section>
+				<h3>Further Reading</h3>
+				<p>
+				<h4>QFPL posts and slide decks</h4>
+				<a href="https://qfpl.io/posts/intro-to-state-machine-testing-1/">Introduction to state machine testing: part 1
+					by Andrew McMiddlin</a>
+				<br />
+				<a href="https://qfpl.io/share/talks/state-machine-testing/index.html">Property based state machine testing by
+					Andrew McMiddlin</a>
+				</p>
+			</section>
 		</div>
+	</div>
 
-		<script src="dist/reveal.js"></script>
-		<script src="plugin/notes/notes.js"></script>
-		<script src="plugin/markdown/markdown.js"></script>
-		<script src="plugin/highlight/highlight.js"></script>
-		<script>
-			// More info about initialization & config:
-			// - https://revealjs.com/initialization/
-			// - https://revealjs.com/config/
-			Reveal.initialize({
-				hash: true,
+	<script src="dist/reveal.js"></script>
+	<script src="plugin/notes/notes.js"></script>
+	<script src="plugin/markdown/markdown.js"></script>
+	<script src="plugin/highlight/highlight.js"></script>
+	<script>
+		// More info about initialization & config:
+		// - https://revealjs.com/initialization/
+		// - https://revealjs.com/config/
+		Reveal.initialize({
+			hash: true,
 
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
-			});
-		</script>
-	</body>
+			// Learn about plugins: https://revealjs.com/plugins/
+			plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+		});
+	</script>
+</body>
+
 </html>
