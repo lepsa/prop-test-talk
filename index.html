@@ -174,9 +174,9 @@
                   xs <- forAll list 
                   reverse (reverse xs) === xs
             </code></pre>
-          <p>Handful of base assertions you can build from</p>
         </section>
         <section>
+					<p>Handful of base assertions</p>
           <ul>
             <li>success</li>
             <li>failure</li>
@@ -249,23 +249,85 @@
           <h3>State machines</h3>
         </section>
         <section>
-          <p>You can write property tests for stateful applications, but it requires a bit more effort</p>
-          <p>You need to model the state of the target application, matching the expected updates, deletes, etc</p>
-          <p>I've linked to an excellent blog post on this at the end</p>
+          <p>Stateful applications requires a bit more effort</p>
+          <p class="fragment">Model the state of the target application. Matching updates, deletes, etc</p>
+          <p class="fragment">Links at the end</p>
+        </section>
+        <section>
+          <p>
+            Testing Model
+          </p>
+          <pre><code class="language-haskell" data-trim data-noescape>
+            data TestUser (v :: * -> *) = TestUser
+              { _userEmail      :: Email
+              , _userGivenName  :: GivenName
+              , _userSurname    :: Surname
+              ...
+              }
+
+            newtype AuthState (v :: * -> *) = AuthState
+              { _authUsers :: Map Email (TestUser v)
+              } deriving (Eq, Show)
+          </code></pre>
+        </section>
+        <section>
+          <p>
+            State machine command
+          </p>
+          <pre><code class="language-haskell" data-trim data-noescape>
+            cNewUser env =
+              Command gen (newUserExe env)
+                [ Update newUserUpdate
+                , Ensure newUserEnsure
+                ]
+              where
+                emailNotUsed s e =
+                  not . any (ilike e) . M.keys $ s ^. authUsers
+                gen state = pure $ AuthNewUser
+                  <$> Gen.filter (emailNotUsed state) genEmail
+                  <*> fmap GivenName text'
+                  <*> fmap Surname text'
+                  <*> fmap Expired Gen.bool
+                  <*> genPassword
+          </code></pre>
         </section>
       </section>
       <section>
-        Links / Libraries
+        <section>
+          <p>While wonderful what do I use?</p>
+        </section>
+        <section>
+          <h3>Libraries</h3>
+          <p>
+            <dl>
+              <dt>Haskell</dt>
+                <dd>Hedgehog</dd>
+                <dd>Quickcheck</dd>
+              <dt>Javascript</dt>
+                <dd>JSVerify</dd>
+            </dl>
+          </p>
+          <p>
+            Search "$LANGUAGE quickcheck"
+          </p>
+        </section>
       </section>
       <section>
         <h3>Further Reading</h3>
         <p>
-        <h4>QFPL posts and slide decks</h4>
-        <a href="https://qfpl.io/posts/intro-to-state-machine-testing-1/">Introduction to state machine testing: part 1
-          by Andrew McMiddlin</a>
-        <br />
-        <a href="https://qfpl.io/share/talks/state-machine-testing/index.html">Property based state machine testing by
-          Andrew McMiddlin</a>
+          <a href="http://www.cse.chalmers.se/~rjmh/QuickCheck/manual.html">QuickCheck Manual</a>
+          <br/>
+          <br/>
+          <a href="https://qfpl.io/posts/intro-to-state-machine-testing-1/">Introduction to state machine testing: part 1
+            <br/>
+            by Andrew McMiddlin
+          </a>
+          <br />
+          <br/>
+          <a href="https://qfpl.io/share/talks/state-machine-testing/index.html">Property based state machine testing
+            <br/>
+            by Andrew McMiddlin
+          </a>
         </p>
       </section>
     </div>
