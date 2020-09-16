@@ -96,7 +96,6 @@
         </section>
         <section>
           <pre><code class="language-haskell" data-trim data-noescape>
-              text' :: MonadGen m => m Text
               text' = Gen.text
                 (Range.constant 1 10)
                 (Gen.filter (/= '\0') Gen.unicode)
@@ -116,13 +115,10 @@
         </section>
         <section>
           <pre><code class="language-haskell" data-trim data-noescape>
-              genPassword :: MonadGen m => m Password
               genPassword = Password <$> text'
 
-              genEmail :: MonadGen m => m Email
               genEmail = Email <$> text'
 
-              genUser :: MonadGen m => m User
               genUser = User <$> genEmail <*> genPassword
             </code></pre>
         </section>
