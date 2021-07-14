@@ -25,9 +25,9 @@
 
             Owen Harvey
 
-            Software Developer
+            Software Engineer 
 
-            CSIRO Data61: E&amp;D
+            APNIC
           </textarea>
       </section>
       <section>
@@ -95,11 +95,32 @@
           <p class="fragment">Filtering for desired traits</p>
         </section>
         <section>
+          <p>
+            All my code examples will be written using
+            <dl>
+              <dt>Haskell</dt>
+                <dd>Hedgehog</dd>
+              <dt>Java</dt>
+                <dd>jqwik</dd>
+            </dl>
+          </p>
+          <p>
+            with some minor handwaving
+          </p>
+        </section>
+        <section>
           <pre><code class="language-haskell" data-trim data-noescape>
-              text' = Gen.text
-                (Range.constant 1 10)
-                (Gen.filter (/= '\0') Gen.unicode)
-            </code></pre>
+            text' = Gen.text
+              (Range.linear 1 10)
+              (Gen.filter (/= '\0') Gen.unicode)
+          </code></pre>
+          <pre><code class="language-java" data-trim data-noescape>
+            @Provide
+            Arbitrary&lt;String&gt; text() {
+              return Arbitraries.strings().all().excludeChars('\u0000')
+                .ofMinLength(1).ofMaxLength(10);
+            }
+          </code></pre>
           <p class="fragment">
             This is telling the testing library to make a string of 1 to 10 unicode characters, excluding the null
             character
@@ -115,12 +136,28 @@
         </section>
         <section>
           <pre><code class="language-haskell" data-trim data-noescape>
-              genPassword = Password <$> text'
+            genPassword = Password <$> text'
 
-              genEmail = Email <$> text'
+            genEmail = Email <$> text'
 
-              genUser = User <$> genEmail <*> genPassword
-            </code></pre>
+            genUser = User <$> genEmail <*> genPassword
+          </code></pre>
+          <pre><code class="language-java" data-trim data-noescape>
+            @Provide
+            Arbitrary&lt;Password&gt; genPassword() {
+              Arbitrary&lt;String&gt; password = Arbitraries.strings().all()
+                .ofMinLength(3).ofMaxLength(21);
+              return Combinators.combine(password)
+                .as((pass) -&gt; new Password(pass))
+            }
+            @Provide
+            Arbitrary&lt;User&gt; genUser() {
+              Arbitrary&lt;Email&gt; email = ...
+              Arbitrary&lt;Password&gt; password = ...
+              return Combinators.combine(email, password)
+                .as((e, p) -&gt; new User(e, p))
+            }
+          </code></pre>
         </section>
       </section>
       <section>
@@ -163,13 +200,25 @@
         </section>
         <section>
           <pre><code class="language-haskell" data-trim data-noescape>
-              list = Gen.list (Range.linear 0 100) Gen.unicode
+            list = Gen.list (Range.linear 0 100) Gen.unicode
 
-              prop_reverse =
-                property $ do
-                  xs <- forAll list 
-                  reverse (reverse xs) === xs
-            </code></pre>
+            prop_reverse =
+              property $ do
+                xs <- forAll list 
+                reverse (reverse xs) === xs
+          </code></pre>
+          <pre><code class="language-java" data-trim data-noescape>
+            @Property
+            boolean listReversal(@ForAll List&lt;int&gt; list) {
+              List&lt;int&gt; list2 = new List(list);
+              Collections.reverse(list2);
+              Collections.reverse(list2);
+              return Arrays.equals(
+                list.toArray(new int[0]),
+                list2.toArray(new int[0])
+              );
+            }
+          </code></pre>
         </section>
         <section>
           <p>Handful of base assertions</p>
@@ -185,7 +234,7 @@
         </section>
         <section>
           <p>
-            Checking data structures and types
+            Checking data structures
           </p>
           <pre><code class="language-haskell" data-trim data-noescape>
             isRight (Left _)  = failure
@@ -194,6 +243,13 @@
             prop_alwaysRight = property $ do
               e <- forAll $ Gen.either Gen.unicode Gen.bool
               isRight e
+          </code></pre>
+          <pre><code class="language-java" data-trim data-noescape>
+            // Either&lt;a, b&gt; I'm using is from functionaljava
+            @Property
+            boolean alwaysRight(@ForAll Either&lt;a, b&gt; e) {
+              return either.isRight(e);
+            }
           </code></pre>
         </section>
       </section>
@@ -245,7 +301,7 @@
           <h3>State machines</h3>
         </section>
         <section>
-          <p>Stateful applications requires a bit more effort</p>
+          <p>Stateful applications require a bit more effort</p>
           <br/>
           <p class="fragment">Model the state of the target application</p>
           <p class="fragment">Updates, deletes, etc</p>
@@ -291,6 +347,33 @@
                   <*> genPassword
           </code></pre>
         </section>
+        <section>
+          <p>
+            State machines for jqwik are similar
+          </p>
+        </section>
+        <section>
+          <p>
+            Taken from<br/>
+            https://jqwik.net/docs/current/user-guide.html#stateful-testing
+          </p>
+          <pre><code class="language-java" data-trim data-noescape>
+            class PopAction implements Action&lt;MyStringStack&gt; {
+              public boolean precondition(MyStringStack stack) {
+                return !stack.isEmpty();
+              }
+              public MyStringStack run(MyStringStack stack) {
+                int sizeBefore = stack.size();
+                String topBefore = stack.top();
+                String popped = stack.pop();
+                Assertions.assertThat(popped).isEqualTo(topBefore);
+                Assertions.assertThat(stack.size())
+                  .isEqualTo(sizeBefore - 1);
+                return stack;
+              }
+            }
+          </code></pre>
+        </section>
       </section>
       <section>
         <section>
@@ -301,14 +384,16 @@
           <p>
             <dl>
               <dt>Haskell</dt>
-                <dd>Hedgehog</dd>
+                <dd>Hedgehog (also available for F#/C#, R, and Scala)</dd>
                 <dd>Quickcheck</dd>
               <dt>Javascript</dt>
                 <dd>JSVerify</dd>
+              <dt>Java</dt>
+                <dd>jqwik</dd>
+                <dd>junit-quickcheck</dd>
+                <dd>Functional Java</dd>
+                <dd>jetCheck</dd>
             </dl>
-          </p>
-          <p>
-            Search "$LANGUAGE quickcheck"
           </p>
         </section>
       </section>
@@ -316,6 +401,9 @@
         <h3>Further Reading</h3>
         <p>
           <a href="http://www.cse.chalmers.se/~rjmh/QuickCheck/manual.html">QuickCheck Manual</a>
+          <br/>
+          <br/>
+          <a href="https://jqwik.net/docs/current/user-guide.html">jqwik User Guide</a>
           <br/>
           <br/>
           <a href="https://qfpl.io/posts/intro-to-state-machine-testing-1/">Introduction to state machine testing: part 1
