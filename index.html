@@ -28,7 +28,7 @@
             Software Engineer 
 
             APNIC
-          </textarea>
+        </textarea>
       </section>
       <section>
         <section>
@@ -61,7 +61,7 @@
           <p>
             Idempotent
             <pre><code class="language-haskell" data-trim data-noescape>
-              logout >> logout === logout
+              logout &gt;&gt; logout === logout
             </code></pre>
           </p>
         </section>
@@ -204,7 +204,7 @@
 
             prop_reverse =
               property $ do
-                xs <- forAll list 
+                xs &lt;- forAll list 
                 reverse (reverse xs) === xs
           </code></pre>
           <pre><code class="language-java" data-trim data-noescape>
@@ -241,7 +241,7 @@
             isRight (Right _) = success
 
             prop_alwaysRight = property $ do
-              e <- forAll $ Gen.either Gen.unicode Gen.bool
+              e &lt;- forAll $ Gen.either Gen.unicode Gen.bool
               isRight e
           </code></pre>
           <pre><code class="language-java" data-trim data-noescape>
