@@ -64,6 +64,12 @@
               logout &gt;&gt; logout === logout
             </code></pre>
           </p>
+          <p>
+            Round Tripping 
+            <pre><code class="language-haskell" data-trim data-noescape>
+              parse (print x) === x
+            </code></pre>
+          </p>
         </section>
       </section>
       <section>
@@ -190,6 +196,7 @@
               <li>Associative</li>
               <li>Commutative</li>
               <li>Idempotent</li>
+              <li>Round Tripping</li>
             </ul>
           </p>
         </section>
