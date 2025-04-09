@@ -19,17 +19,6 @@
   <div class="reveal">
     <div class="slides">
       <section>Property Based Testing</section>
-      <section data-markdown>
-        <textarea data-template>
-            ### Who am I?
-
-            Owen Harvey
-
-            Software Engineer 
-
-            APNIC
-        </textarea>
-      </section>
       <section>
         <section>
           <h3>
@@ -88,6 +77,7 @@
           <li>Generate some data</li>
           <li>Test the property</li>
           <li>Shrink the data if the property fails</li>
+          <li>Test again</li>
         </ul>
         </p>
       </section>
@@ -116,6 +106,7 @@
         </section>
         <section>
           <pre><code class="language-haskell" data-trim data-noescape>
+            text' :: MonadGen m => m Text
             text' = Gen.text
               (Range.linear 1 10)
               (Gen.filter (/= '\0') Gen.unicode)
@@ -137,15 +128,17 @@
         </section>
         <section>
           <p>Generated data is composed to make larger structures</p>
-          <p>You start by describing the smallest part of your data, what it needs, and then use that generator in the
-            next level up</p>
+          <p>Describing the smallest part of your data</p>
+          <p>How to compose with bigger generators</p>
         </section>
         <section>
           <pre><code class="language-haskell" data-trim data-noescape>
+            newtype Password = Password Text
+            newtype Email = Email Text
+            data User = User Email Password
             genPassword = Password <$> text'
-
             genEmail = Email <$> text'
-
+            genUser :: MonadGen m => m User
             genUser = User <$> genEmail <*> genPassword
           </code></pre>
           <pre><code class="language-java" data-trim data-noescape>
@@ -266,7 +259,7 @@
         </section>
         <section>
           <p>
-            When a failing input is found for a property several things happen
+            When a failing input is found for a property<br/>several things happen
           </p>
           <ul>
             <li>The generator and seed are saved</li>
@@ -322,14 +315,14 @@
           </p>
           <pre><code class="language-haskell" data-trim data-noescape>
             data TestUser (v :: * -> *) = TestUser
-              { _userEmail      :: Email
-              , _userGivenName  :: GivenName
-              , _userSurname    :: Surname
+              { userEmail      :: Email
+              , userGivenName  :: GivenName
+              , userSurname    :: Surname
               ...
               }
 
             newtype AuthState (v :: * -> *) = AuthState
-              { _authUsers :: Map Email (TestUser v)
+              { authUsers :: Map Email (TestUser v)
               } deriving (Eq, Show)
           </code></pre>
         </section>
@@ -340,19 +333,35 @@
           <pre><code class="language-haskell" data-trim data-noescape>
             cNewUser env =
               Command gen (newUserExe env)
-                [ Update newUserUpdate
-                , Ensure newUserEnsure
+                [ Require newUserPrecondition
+                , Update newUserUpdate
+                , Ensure newUserPostcondition
                 ]
               where
                 emailNotUsed s e =
-                  not . any (ilike e) . M.keys $ s ^. authUsers
+                  not . any (ilike e) . M.keys $ authUsers s
                 gen state = pure $ AuthNewUser
                   <$> Gen.filter (emailNotUsed state) genEmail
                   <*> fmap GivenName text'
-                  <*> fmap Surname text'
-                  <*> fmap Expired Gen.bool
-                  <*> genPassword
+                  <*> ...
           </code></pre>
+        </section>
+        <section>
+          <p>Running a state machine</p>
+          <p>
+          <pre><code class="language-haskell" data-trim data-noescape>
+            prop_state_machine :: Property
+            prop_state_machine = property $ do
+              actions <- forAll $ Gen.executeSequential
+                (Range.linear 1 100)
+                initialState
+                [cNewUser, ...]
+              executeSequential initialState actions
+            
+            tests :: IO Bool
+            tests :: checkSequential $$(discover)
+          </code></pre>
+          </p>
         </section>
         <section>
           <p>
@@ -397,9 +406,9 @@
                 <dd>JSVerify</dd>
               <dt>Java</dt>
                 <dd>jqwik</dd>
-                <dd>junit-quickcheck</dd>
-                <dd>Functional Java</dd>
-                <dd>jetCheck</dd>
+              <dt>Python</dt>
+                <dd>Hypothesis</dd>
+
             </dl>
           </p>
         </section>
@@ -410,7 +419,7 @@
           <a href="http://www.cse.chalmers.se/~rjmh/QuickCheck/manual.html">QuickCheck Manual</a>
           <br/>
           <br/>
-          <a href="https://jqwik.net/docs/current/user-guide.html">jqwik User Guide</a>
+          <a href="https://hypothesis.readthedocs.io/en/latest/">Hypothesis Documentation</a>
           <br/>
           <br/>
           <a href="https://qfpl.io/posts/intro-to-state-machine-testing-1/">Introduction to state machine testing: part 1
